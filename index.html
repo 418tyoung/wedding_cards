@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Save the Date</title>
+
+<!-- Open Graph: controls the preview that shows up when you paste the link in WhatsApp / iMessage -->
+<meta property="og:title" content="Save the Date — Alex & Sam">
+<meta property="og:description" content="14 September 2026 · Tap to see who's invited">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:        #14202b;   /* deep midnight blue          */
+    --ink-soft:   #20303d;
+    --paper:      #f4efe6;   /* warm card paper             */
+    --paper-line: #e6ddcd;
+    --gold:       #b8924e;   /* foil accent                 */
+    --gold-soft:  #cdab6e;
+    --mist:       #9aa7ac;   /* muted captions              */
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{ height:100%; }
+
+  body{
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:1.6rem;
+    padding:2rem 1.2rem;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #1c2c3a 0%, var(--ink) 55%, #0c151d 100%);
+    font-family:'Jost', system-ui, sans-serif;
+    color:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- the flip card ---------- */
+  .stage{
+    perspective: 1600px;
+    width:min(420px, 92vw);
+    aspect-ratio: 5 / 7;
+  }
+
+  .card{
+    position:relative;
+    width:100%;
+    height:100%;
+    transform-style:preserve-3d;
+    transition: transform .9s cubic-bezier(.2,.8,.2,1);
+    cursor:pointer;
+    border-radius:6px;
+  }
+
+  /* Flip on hover for devices that actually have a pointer (desktop) */
+  @media (hover:hover){
+    .card:hover{ transform: rotateY(180deg); }
+  }
+  /* Flip on tap/click for everyone (toggled via JS) */
+  .card.is-flipped{ transform: rotateY(180deg); }
+
+  .card:focus-visible{
+    outline:3px solid var(--gold-soft);
+    outline-offset:8px;
+  }
+
+  .face{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    border-radius:6px;
+    background:var(--paper);
+    color:var(--ink);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.4) inset,
+      0 30px 60px -20px rgba(0,0,0,.65),
+      0 8px 20px -12px rgba(0,0,0,.5);
+    padding:2.4rem 2rem;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* thin gold keyline just inside each face */
+  .face::after{
+    content:"";
+    position:absolute;
+    inset:14px;
+    border:1px solid var(--gold);
+    opacity:.55;
+    border-radius:3px;
+    pointer-events:none;
+  }
+
+  /* ---------- FRONT ---------- */
+  .front{ align-items:center; text-align:center; justify-content:space-between; }
+
+  .eyebrow{
+    font-family:'Jost';
+    font-weight:400;
+    letter-spacing:.42em;
+    text-transform:uppercase;
+    font-size:.72rem;
+    color:var(--gold);
+    padding-left:.42em;            /* optical fix for tracking */
+  }
+
+  .names{
+    font-family:'Fraunces', serif;
+    font-weight:400;
+    font-size:clamp(2.5rem, 9vw, 3.4rem);
+    line-height:1.02;
+    color:var(--ink);
+  }
+  .amp{
+    display:block;
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:1.5rem;
+    color:var(--gold);
+    margin:.15em 0;
+  }
+
+  .rule{
+    width:42px; height:1px;
+    background:var(--gold);
+    margin:0 auto;
+    opacity:.7;
+  }
+
+  .when{
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.5rem;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+  }
+  .where{
+    font-family:'Jost';
+    font-weight:300;
+    font-size:.82rem;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--mist);
+    margin-top:.5rem;
+  }
+
+  .hint{
+    font-family:'Jost';
+    font-weight:300;
+    font-size:.66rem;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--gold);
+    display:flex;
+    align-items:center;
+    gap:.5em;
+  }
+  .hint svg{ width:12px; height:12px; }
+
+  /* ---------- BACK ---------- */
+  .back{
+    transform:rotateY(180deg);
+    background:var(--ink);
+    color:var(--paper);
+    text-align:center;
+    align-items:center;
+  }
+  .back::after{ border-color:var(--gold-soft); opacity:.4; }
+
+  .back .eyebrow{ color:var(--gold-soft); }
+
+  .back-title{
+    font-family:'Fraunces', serif;
+    font-size:1.7rem;
+    color:var(--paper);
+    margin:.2rem 0 1rem;
+  }
+
+  .guests{
+    flex:1;
+    width:100%;
+    overflow:auto;
+    display:flex;
+    flex-direction:column;
+    gap:.55rem;
+    padding:.2rem .4rem;
+    align-content:start;
+  }
+  .guest{
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.3rem;
+    line-height:1.2;
+    color:#e9e0cf;
+    padding-bottom:.45rem;
+    border-bottom:1px solid rgba(184,146,78,.25);
+  }
+  .guest:last-child{ border-bottom:none; }
+
+  .back-foot{
+    font-family:'Jost';
+    font-weight:300;
+    font-size:.66rem;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    margin-top:1rem;
+  }
+
+  .caption{
+    font-family:'Jost';
+    font-weight:300;
+    font-size:.78rem;
+    letter-spacing:.04em;
+    color:var(--mist);
+    text-align:center;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .card{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage">
+    <!-- role/tabindex make it keyboard-flippable and accessible -->
+    <div class="card" id="card" role="button" tabindex="0"
+         aria-label="Save the date card. Activate to see who is invited.">
+
+      <!-- FRONT -->
+      <div class="face front">
+        <span class="eyebrow">Save the Date</span>
+
+        <div>
+          <div class="names">Alex<span class="amp">&amp;</span>Sam</div>
+        </div>
+
+        <div>
+          <div class="rule"></div>
+          <p class="when" style="margin-top:1rem;">Saturday, 14 September 2026</p>
+          <p class="where">Florence, Italy</p>
+        </div>
+
+        <span class="hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12s3-7 9-7 9 7 9 7-3 7-9 7-9-7-9-7Z"/><circle cx="12" cy="12" r="2.5"/>
+          </svg>
+          Hover · Tap to see guests
+        </span>
+      </div>
+
+      <!-- BACK -->
+      <div class="face back">
+        <span class="eyebrow">You're Invited</span>
+        <h2 class="back-title">Our People</h2>
+
+        <div class="guests">
+          <div class="guest">Eleanor &amp; James Whitfield</div>
+          <div class="guest">The Patel Family</div>
+          <div class="guest">Marcus Lee</div>
+          <div class="guest">Sofia Romano</div>
+          <div class="guest">Grandma Rose</div>
+          <div class="guest">Daniel &amp; Priya Okafor</div>
+          <div class="guest">The Henderson Crew</div>
+          <div class="guest">Aunt Maria &amp; Uncle Theo</div>
+        </div>
+
+        <div class="back-foot">Formal invitation to follow</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="caption">Tap the card to flip it</p>
+
+<script>
+  // Tap / click / keyboard flips the card on every device.
+  const card = document.getElementById('card');
+  const flip = () => card.classList.toggle('is-flipped');
+  card.addEventListener('click', flip);
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
+  });
+</script>
+</body>
+</html>
