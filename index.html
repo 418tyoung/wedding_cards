@@ -90,28 +90,63 @@
       <div class="face front"><img src="front.png" alt="Save the date"></div>
 
       <div class="face back">
-        <span class="eyebrow">You're Invited</span>
-        <h2 class="back-title">Our People</h2>
-        <div class="guests">
-          <div class="guest">Eleanor &amp; James Whitfield</div>
-          <div class="guest">The Patel Family</div>
-          <div class="guest">Marcus Lee</div>
-          <div class="guest">Sofia Romano</div>
-          <div class="guest">Grandma Rose</div>
-          <div class="guest">Daniel &amp; Priya Okafor</div>
-          <div class="guest">The Henderson Crew</div>
-          <div class="guest">Aunt Maria &amp; Uncle Theo</div>
+        <span class="eyebrow" id="eyebrow">You're Invited</span>
+        <h2 class="back-title" id="backTitle">Whoops, something went wrong</h2>
+        <div class="guests" id="guests">
+          <div class="guest">Message us and we'll let you know</div>
         </div>
-        <div class="back-foot">Formal invitation to follow</div>
+        <div class="back-foot" id="backFoot">Formal invitation to follow</div>
       </div>
     </div>
   </div>
   <p class="caption">Tap the card to flip it</p>
 <script>
+  // ---- Flip behaviour ----
   const card = document.getElementById('card');
   const flip = () => card.classList.toggle('is-flipped');
   card.addEventListener('click', flip);
   card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+
+  // ---- Personalise from the URL ----
+  // ?to=The Patel Family            -> headline on the back
+  // ?guests=Anita Patel|Raj Patel   -> the list of names (separated by | )
+  // With neither, the card shows a friendly "something went wrong" state.
+  const params = new URLSearchParams(location.search);
+  const to = params.get('to');
+  const guestsParam = params.get('guests');
+
+  const eyebrow = document.getElementById('eyebrow');
+  const title   = document.getElementById('backTitle');
+  const list    = document.getElementById('guests');
+  const foot    = document.getElementById('backFoot');
+
+  if (!to && !guestsParam) {
+    // No name attached: clean fallback, no half-finished invite chrome.
+    eyebrow.style.display = 'none';
+    foot.style.display = 'none';
+    title.textContent = 'Whoops, something went wrong';
+    list.innerHTML = '';
+    const msg = document.createElement('div');
+    msg.className = 'guest';
+    msg.textContent = "Message us and we'll let you know";
+    list.appendChild(msg);
+  } else {
+    // Personalised invite.
+    eyebrow.style.display = '';
+    foot.style.display = '';
+    eyebrow.textContent = "You're Invited";
+    title.textContent = to || 'Our People';
+    if (guestsParam) {
+      const names = guestsParam.split('|').map(s => s.trim()).filter(Boolean);
+      list.innerHTML = '';
+      for (const name of names) {
+        const div = document.createElement('div');
+        div.className = 'guest';
+        div.textContent = name;   // keeps it safe and shows & correctly
+        list.appendChild(div);
+      }
+    }
+  }
 </script>
 </body>
 </html>
