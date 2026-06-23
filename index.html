@@ -40,6 +40,18 @@
     color:var(--ink);
     -webkit-font-smoothing:antialiased;
   }
+  /* a soft light that drifts and breathes behind everything (clearly visible) */
+  .bg-glow{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .bg-glow::before{
+    content:""; position:absolute; inset:-35%;
+    background:radial-gradient(38% 38% at 50% 50%, rgba(255,255,255,.65), rgba(255,255,255,0) 70%);
+    animation:floatGlow 7s ease-in-out infinite;
+  }
+  @keyframes floatGlow{
+    0%{   transform:translate(-16%,-12%) scale(1);   }
+    50%{  transform:translate(16%, 10%) scale(1.35);  }
+    100%{ transform:translate(-16%,-12%) scale(1);   }
+  }
   .card{
     position:relative; width:100%; height:100%;
     transform-style:preserve-3d;
@@ -64,15 +76,9 @@
     transform:rotateY(180deg); background:var(--paper); color:var(--ink);
     text-align:center; align-items:center; justify-content:center; padding:2.6rem 2.1rem;
   }
-  /* double sage keyline, echoing the printed border on the front */
-  .back::after{
-    content:""; position:absolute; inset:13px;
-    border:1.5px solid var(--sage); opacity:.85; border-radius:2px; pointer-events:none;
-  }
-  .back::before{
-    content:""; position:absolute; inset:21px;
-    border:1px solid var(--sage); opacity:.55; border-radius:1px; pointer-events:none; z-index:1;
-  }
+  /* double sage keyline drawn in the card's own 105x148 (mm) coordinate system,
+     matching the Canva frame: thick line 4mm in @ weight 2, thin line 6mm in @ weight 1 */
+  .frame{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   .eyebrow{
     font-family:'Cormorant Garamond', serif; font-weight:600;
     letter-spacing:.34em; text-transform:uppercase; font-size:.86rem;
@@ -106,17 +112,76 @@
     padding-left:.26em;
   }
   .caption{ font-family:'Cormorant Garamond', serif; font-size:.95rem; letter-spacing:.16em; text-transform:uppercase; color:var(--sage-deep); text-align:center; }
-  @media (prefers-reduced-motion:reduce){ .card{ transition:none; } }
+  @media (prefers-reduced-motion:reduce){ .card{ transition:none; } .bg-glow::before{ animation:none; } }
+
+  /* ---- Download FAB (corner printer icon that expands on hover) ---- */
+  .print-fab{
+    position:fixed; bottom:18px; right:18px; z-index:60;
+    display:inline-flex; align-items:center; overflow:hidden;
+    height:46px; padding:0; border:none; border-radius:999px; cursor:pointer;
+    background:#88a482; color:#fff;
+    box-shadow:0 6px 18px -6px rgba(54,72,49,.55);
+    transition:background .2s ease;
+  }
+  .print-fab .ico{ flex:0 0 46px; width:46px; height:46px; display:grid; place-items:center; }
+  .print-fab .ico svg{ width:20px; height:20px; }
+  .print-fab-label{
+    max-width:0; opacity:0; white-space:nowrap;
+    font-family:'Cormorant Garamond', serif; font-weight:600;
+    letter-spacing:.12em; text-transform:uppercase; font-size:.74rem;
+    transition:max-width .38s cubic-bezier(.2,.8,.2,1), opacity .3s ease, padding .38s ease;
+    padding-right:0;
+  }
+  .print-fab:hover, .print-fab:focus-visible{ background:var(--sage); outline:none; }
+  .print-fab:hover .print-fab-label, .print-fab:focus-visible .print-fab-label{
+    max-width:240px; opacity:1; padding-right:1.2em;
+  }
+  .print-fab[hidden]{ display:none !important; }
+
+  /* ---- A4 print layout (hidden on screen, shown only when printing) ---- */
+  #printSheet{ display:none; }
+  .print-back{
+    position:relative; width:105mm; height:148mm; background:#fff; color:var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:9mm 8mm; overflow:hidden;
+  }
+  .panel-front img{ display:block; width:105mm; height:148mm; object-fit:cover; }
+
+  @media print{
+    @page{ size:A4 portrait; margin:0; }
+    html,body{ background:#fff !important; min-height:0; }
+    body{ display:block; padding:0; }
+    .stage, .caption, .print-fab, .bg-glow{ display:none !important; }
+    #printSheet{
+      display:flex !important; flex-direction:column; align-items:center;
+      width:210mm; height:297mm; padding-top:24mm; gap:8mm;
+    }
+    .sheet-block{ position:relative; display:flex; width:210mm; height:148mm; }
+    .panel{ width:105mm; height:148mm; }
+    .foldline{
+      position:absolute; top:0; bottom:0; left:105mm;
+      border-left:.2mm dashed #9aa7ac;
+    }
+    .print-note{
+      font-family:'Cormorant Garamond', serif; font-size:9pt; letter-spacing:.04em;
+      color:#9aa7ac; text-align:center;
+    }
+  }
 
 </style>
 </head>
 <body>
+  <div class="bg-glow" aria-hidden="true"></div>
   <div class="stage">
     <div class="card" id="card" role="button" tabindex="0"
          aria-label="Save the date card. Activate to see who is invited.">
       <div class="face front"><img src="front.png" alt="Save the date"></div>
 
       <div class="face back">
+        <svg class="frame" viewBox="0 0 105 148" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <rect x="4" y="4" width="97" height="140" rx="0.2" ry="0.2" fill="none" stroke="var(--sage)" stroke-width="0.6"/>
+          <rect x="6" y="6" width="93" height="136" rx="0.1" ry="0.1" fill="none" stroke="var(--sage)" stroke-width="0.3"/>
+        </svg>
         <span class="eyebrow" id="eyebrow">You're Invited</span>
         <h2 class="back-title" id="backTitle">Our People</h2>
         <div class="guests" id="guests">
@@ -134,6 +199,26 @@
     </div>
   </div>
   <p class="caption">Tap the card to flip it</p>
+  <button type="button" id="downloadBtn" class="print-fab" aria-label="Download printable card">
+    <span class="ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9V3h12v6"/>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="7" rx="1"/>
+      </svg>
+    </span>
+    <span class="print-fab-label">Download printable card</span>
+  </button>
+
+  <!-- Print-only A4 layout: front + current back, side by side at true A6 size, fold down the middle -->
+  <div id="printSheet" aria-hidden="true">
+    <div class="sheet-block">
+      <div class="panel print-back" id="printBack"></div>
+      <div class="panel panel-front"><img src="front.png" alt="Save the date"></div>
+      <div class="foldline"></div>
+    </div>
+    <p class="print-note">Print at 100% (actual size) · trim to the outer block · fold along the dashed line, printed side out</p>
+  </div>
 <script>
   // ---- Flip behaviour ----
   const card = document.getElementById('card');
@@ -190,6 +275,17 @@
       list.style.display = 'none';
     }
   }
+
+  // ---- Printable A4 version ----
+  // Clones the current (personalised) back into the print panel, then opens the
+  // print dialog (choose "Save as PDF" to keep a file). Front + back print at
+  // true A6 size, ready to fold.
+  const downloadBtn = document.getElementById('downloadBtn');
+  downloadBtn.addEventListener('click', () => {
+    const printBack = document.getElementById('printBack');
+    printBack.innerHTML = document.querySelector('.face.back').innerHTML;
+    window.print();
+  });
 </script>
 </body>
 </html>
