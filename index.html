@@ -144,6 +144,57 @@
   }
   .print-fab[hidden]{ display:none !important; }
 
+  /* ---- Graduation easter-egg FAB (bottom-left) — subtle hat, expands when active ---- */
+  .grad-fab{
+    position:fixed; bottom:18px; left:18px; z-index:60;
+    display:inline-flex; align-items:center; overflow:hidden;
+    height:46px; padding:0; border:none; border-radius:999px; cursor:pointer;
+    background:transparent; color:var(--sage-deep); box-shadow:none; opacity:.4;
+    transition:opacity .25s ease, background .25s ease, box-shadow .25s ease, color .25s ease;
+  }
+  .grad-fab .ico{ flex:0 0 46px; width:46px; height:46px; display:grid; place-items:center; }
+  .grad-fab .ico svg{ width:22px; height:22px; }
+  .grad-fab-label{
+    max-width:0; opacity:0; white-space:nowrap;
+    font-family:'Cormorant Garamond', serif; font-weight:600;
+    letter-spacing:.12em; text-transform:uppercase; font-size:.74rem;
+    transition:max-width .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease, padding .4s ease;
+    padding-right:0;
+  }
+  .grad-fab:hover{ opacity:.8; }                          /* a little more visible on hover */
+  .grad-fab.active{                                       /* full gold pill when on */
+    background:#b8924e; color:#fff; opacity:1;
+    box-shadow:0 6px 18px -6px rgba(54,72,49,.55);
+  }
+  .grad-fab.active .grad-fab-label{ max-width:240px; opacity:1; padding-right:1.2em; }
+
+  /* quick "flip" when swapping the front image / signature */
+  .flipswap{ animation:flipSwap .5s ease; }
+  @keyframes flipSwap{ 0%{ transform:scaleX(1); } 50%{ transform:scaleX(0); } 100%{ transform:scaleX(1); } }
+
+  /* confetti */
+  .confetti-piece{
+    position:fixed; top:0; left:0; width:9px; height:14px; z-index:80;
+    pointer-events:none; will-change:transform, opacity; border-radius:1px;
+  }
+
+  /* fast-forward preview overlay */
+  .grad-preview{
+    position:fixed; left:50%; top:50%; z-index:70;
+    transform:translate(-50%,-50%) scale(.92); opacity:0; visibility:hidden;
+    display:inline-flex; align-items:center; gap:.55em;
+    background:rgba(32,48,32,.94); color:#fff; padding:.62em 1.1em; border-radius:999px;
+    font-family:'Cormorant Garamond', serif; font-weight:600;
+    letter-spacing:.16em; text-transform:uppercase; font-size:.92rem; white-space:nowrap;
+    box-shadow:0 14px 34px -12px rgba(0,0,0,.55);
+    transition:opacity .3s ease, transform .3s ease; pointer-events:none;
+  }
+  .grad-preview.show{ opacity:1; visibility:visible; transform:translate(-50%,-50%) scale(1); }
+  .ff-icon{ width:18px; height:18px; color:#cdab6e; }
+  .ff-icon.play{ animation:ffPulse .45s linear infinite; }
+  @keyframes ffPulse{ 0%{ transform:translateX(-2px); opacity:.7; } 50%{ transform:translateX(2px); opacity:1; } 100%{ transform:translateX(-2px); opacity:.7; } }
+  .pv-date{ letter-spacing:.12em; color:#e9e0cf; min-width:6.5em; text-align:left; }
+
   /* ---- A4 print layout (hidden on screen, shown only when printing) ---- */
   #printSheet{ display:none; }
   .print-back{
@@ -157,7 +208,7 @@
     @page{ size:A4 portrait; margin:0; }
     html,body{ background:#fff !important; min-height:0; }
     body{ display:block; padding:0; }
-    .stage, .caption, .print-fab, .bg-glow{ display:none !important; }
+    .stage, .caption, .print-fab, .grad-fab, .bg-glow, .grad-preview{ display:none !important; }
     #printSheet{
       display:flex !important; flex-direction:column; align-items:center;
       width:210mm; height:297mm; padding-top:24mm; gap:8mm;
@@ -217,6 +268,26 @@
     </span>
     <span class="print-fab-label">Download printable card</span>
   </button>
+
+  <button type="button" id="gradBtn" class="grad-fab" aria-label="Graduation mode" title="Graduation mode">
+    <span class="ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 9 12 4.8 2.5 9 12 13.2 21.5 9Z"/>
+        <path d="M6 11v4.2c0 1.1 2.7 2.3 6 2.3s6-1.2 6-2.3V11"/>
+        <path d="M21.5 9v4.4"/>
+      </svg>
+    </span>
+    <span class="grad-fab-label">Graduation mode</span>
+  </button>
+
+  <!-- fast-forward "previewing the future" overlay (shown when turning graduation mode on) -->
+  <div id="gradPreview" class="grad-preview" aria-hidden="true">
+    <svg class="ff-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M4 5l8 7-8 7V5Z"/><path d="M13 5l8 7-8 7V5Z"/>
+    </svg>
+    <span class="pv-label">Previewing</span>
+    <span class="pv-date" id="previewDate">--/--/--</span>
+  </div>
 
   <!-- Print-only A4 layout: front + current back, side by side at true A6 size, fold down the middle -->
   <div id="printSheet" aria-hidden="true">
@@ -292,11 +363,103 @@
   // Clones the current (personalised) back into the print panel, then opens the
   // print dialog (choose "Save as PDF" to keep a file). Front + back print at
   // true A6 size, ready to fold.
+  const frontImg = document.querySelector('.front img');
+  const sigImg   = document.querySelector('.signature');
   const downloadBtn = document.getElementById('downloadBtn');
   downloadBtn.addEventListener('click', () => {
     const printBack = document.getElementById('printBack');
     printBack.innerHTML = document.querySelector('.face.back').innerHTML;
+    const printFront = document.querySelector('.panel-front img');
+    if (printFront) printFront.src = frontImg.getAttribute('src');   // match current mode
     window.print();
+  });
+
+  // ---- Graduation mode (easter egg) ----
+  const NORMAL = { front: 'front.png',      sig: 'signature.png' };
+  const GRAD   = { front: 'front-grad.png', sig: 'signature-grad.png' };
+  // preload the graduation images so the swap is instant / flash-free
+  [GRAD.front, GRAD.sig].forEach(s => { const i = new Image(); i.src = s; });
+
+  function flipSwap(img, newSrc){
+    if (!img) return;
+    img.classList.remove('flipswap'); void img.offsetWidth;   // restart animation
+    img.classList.add('flipswap');
+    setTimeout(() => { img.setAttribute('src', newSrc); }, 250);  // swap while edge-on
+    setTimeout(() => { img.classList.remove('flipswap'); }, 520);
+  }
+
+  function confettiBurst(){
+    const r = document.querySelector('.stage').getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const colors = ['#5e7a5a','#8da889','#b8924e','#c6d2b9','#46583f','#ffffff'];
+    for (let i = 0; i < 40; i++){
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.background = colors[i % colors.length];
+      p.style.left = cx + 'px'; p.style.top = cy + 'px';
+      document.body.appendChild(p);
+      const ang = Math.random() * Math.PI * 2;
+      const spd = 5 + Math.random() * 7;
+      let vx = Math.cos(ang) * spd;
+      let vy = Math.sin(ang) * spd - (5 + Math.random() * 5);   // upward bias
+      let x = 0, y = 0, rot = Math.random() * 360;
+      const vr = (Math.random() - 0.5) * 24;
+      let life = 0; const maxLife = 60 + Math.random() * 35;
+      (function frame(){
+        life++; vy += 0.32; x += vx; y += vy; rot += vr;
+        p.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg)`;
+        p.style.opacity = String(Math.max(0, 1 - life / maxLife));
+        if (life < maxLife) requestAnimationFrame(frame); else p.remove();
+      })();
+    }
+  }
+
+  let gradOn = false, gradBusy = false;
+  const gradBtn = document.getElementById('gradBtn');
+
+  // Hannah's graduation date — set this to the real date when known.
+  const GRAD_DATE = "circa March 2027";
+  const previewEl   = document.getElementById('gradPreview');
+  const previewDate = document.getElementById('previewDate');
+  const ffIcon      = previewEl.querySelector('.ff-icon');
+  const rand2 = () => String(Math.floor(Math.random() * 90) + 10);
+
+  function playPreview(done){
+    previewEl.classList.add('show');
+    ffIcon.classList.add('play');
+    const start = performance.now(), dur = 950;
+    (function roll(){
+      if (performance.now() - start < dur){
+        previewDate.textContent = `${rand2()}/${rand2()}/${rand2()}`;   // fast-forward through dates
+        setTimeout(roll, 55);
+      } else {
+        previewDate.textContent = GRAD_DATE;      // land on the graduation date
+        ffIcon.classList.remove('play');
+        setTimeout(() => {                        // hold on the date for 1s, then fade out
+          previewEl.classList.remove('show');
+          setTimeout(() => done && done(), 340);
+        }, 1000);
+      }
+    })();
+  }
+
+  gradBtn.addEventListener('click', () => {
+    if (gradBusy) return;
+    gradOn = !gradOn;
+    gradBtn.classList.toggle('active', gradOn);
+    document.body.classList.toggle('grad-mode', gradOn);
+    if (gradOn){
+      gradBusy = true;
+      playPreview(() => {                         // fast-forward first...
+        flipSwap(frontImg, GRAD.front);           // ...then reveal grad images...
+        flipSwap(sigImg,   GRAD.sig);
+        setTimeout(confettiBurst, 180);           // ...and celebrate
+        gradBusy = false;
+      });
+    } else {
+      flipSwap(frontImg, NORMAL.front);
+      flipSwap(sigImg,   NORMAL.sig);
+    }
   });
 </script>
 </body>
