@@ -74,8 +74,15 @@
   /* white back, sage accents — styled to match the front stationery */
   .back{
     transform:rotateY(180deg); background:var(--paper); color:var(--ink);
-    text-align:center; align-items:center; justify-content:center; padding:2.6rem 2.1rem;
+    text-align:center; align-items:center; justify-content:flex-start; padding:2.6rem 2.1rem;
   }
+  /* top group (You're Invited + family) pinned to top; closing to the bottom */
+  .back-top{ display:flex; flex-direction:column; align-items:center; width:100%; }
+  /* names fill and centre in the space between top and bottom */
+  .guests{ flex:1; width:100%; display:flex; flex-direction:column; justify-content:center; gap:.5rem; padding:.2rem .4rem; }
+  /* error / name-only states: centre the whole group instead of spreading */
+  .back.centered{ justify-content:center; }
+  .back.centered .guests{ flex:0 0 auto; }
   /* double sage keyline drawn in the card's own 105x148 (mm) coordinate system,
      matching the Canva frame: thick line 4mm in @ weight 2, thin line 6mm in @ weight 1 */
   .frame{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
@@ -90,7 +97,6 @@
     font-size:1.55rem; line-height:1.15; color:var(--sage-deep);
     margin:.35rem 0 1rem;
   }
-  .guests{ width:100%; display:flex; flex-direction:column; gap:.5rem; padding:.2rem .4rem; margin:.2rem 0 .4rem; }
   .guest{
     font-family:'Cormorant Garamond', serif; font-weight:500;
     font-size:1.45rem; line-height:1.25; color:var(--sage-deep);
@@ -182,8 +188,10 @@
           <rect x="4" y="4" width="97" height="140" rx="0.2" ry="0.2" fill="none" stroke="var(--sage)" stroke-width="0.6"/>
           <rect x="6" y="6" width="93" height="136" rx="0.1" ry="0.1" fill="none" stroke="#8da889" stroke-width="0.3"/>
         </svg>
-        <span class="eyebrow" id="eyebrow">You're Invited</span>
-        <h2 class="back-title" id="backTitle">Our People</h2>
+        <div class="back-top">
+          <span class="eyebrow" id="eyebrow">You're Invited</span>
+          <h2 class="back-title" id="backTitle">Our People</h2>
+        </div>
         <div class="guests" id="guests">
           <div class="guest">Eleanor &amp; James Whitfield</div>
           <div class="guest">The Patel Family</div>
@@ -241,12 +249,14 @@
   const title   = document.getElementById('backTitle');
   const list    = document.getElementById('guests');
   const closing = document.getElementById('closing');
+  const back    = document.querySelector('.face.back');
 
   if (!to) {
     // No name attached: clean fallback, no half-finished invite chrome.
     eyebrow.style.display = 'none';
     closing.style.display = 'none';
     list.style.display = '';
+    back.classList.add('centered');
     title.textContent = 'Whoops, something went wrong';
     list.innerHTML = '';
     const msg = document.createElement('div');
@@ -269,10 +279,12 @@
         div.textContent = name;   // keeps it safe and shows & correctly
         list.appendChild(div);
       }
+      back.classList.remove('centered');   // spread: top / names / bottom
     } else {
       // Named invitee, no separate guest list -> just the name.
       list.innerHTML = '';
       list.style.display = 'none';
+      back.classList.add('centered');      // no names -> keep it centred
     }
   }
 
