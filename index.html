@@ -168,10 +168,6 @@
   }
   .grad-fab.active .grad-fab-label{ max-width:240px; opacity:1; padding-right:1.2em; }
 
-  /* quick "flip" when swapping the front image / signature */
-  .flipswap{ animation:flipSwap .5s ease; }
-  @keyframes flipSwap{ 0%{ transform:scaleX(1); } 50%{ transform:scaleX(0); } 100%{ transform:scaleX(1); } }
-
   /* confetti */
   .confetti-piece{
     position:fixed; top:0; left:0; width:9px; height:14px; z-index:80;
@@ -380,12 +376,8 @@
   // preload the graduation images so the swap is instant / flash-free
   [GRAD.front, GRAD.sig].forEach(s => { const i = new Image(); i.src = s; });
 
-  function flipSwap(img, newSrc){
-    if (!img) return;
-    img.classList.remove('flipswap'); void img.offsetWidth;   // restart animation
-    img.classList.add('flipswap');
-    setTimeout(() => { img.setAttribute('src', newSrc); }, 250);  // swap while edge-on
-    setTimeout(() => { img.classList.remove('flipswap'); }, 520);
+  function swapImg(img, newSrc){
+    if (img) img.setAttribute('src', newSrc);   // instant swap, no animation
   }
 
   function confettiBurst(){
@@ -451,14 +443,14 @@
     if (gradOn){
       gradBusy = true;
       playPreview(() => {                         // fast-forward first...
-        flipSwap(frontImg, GRAD.front);           // ...then reveal grad images...
-        flipSwap(sigImg,   GRAD.sig);
+        swapImg(frontImg, GRAD.front);            // ...then reveal grad images...
+        swapImg(sigImg,   GRAD.sig);
         setTimeout(confettiBurst, 180);           // ...and celebrate
         gradBusy = false;
       });
     } else {
-      flipSwap(frontImg, NORMAL.front);
-      flipSwap(sigImg,   NORMAL.sig);
+      swapImg(frontImg, NORMAL.front);
+      swapImg(sigImg,   NORMAL.sig);
     }
   });
 </script>
