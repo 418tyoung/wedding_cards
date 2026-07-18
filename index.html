@@ -94,8 +94,8 @@
   .back-title{
     font-family:'Cormorant Garamond', serif; font-weight:500;
     text-transform:uppercase; letter-spacing:.06em;
-    font-size:1.55rem; line-height:1.15; color:var(--sage-deep);
-    margin:.35rem 0 1rem;
+    font-size:1.3rem; line-height:1.15; color:var(--sage-deep);
+    margin:.95rem 0 1rem;
   }
   .guest{
     font-family:'Cormorant Garamond', serif; font-weight:500;
@@ -318,11 +318,12 @@
   const closing = document.getElementById('closing');
   const back    = document.querySelector('.face.back');
 
-  if (!to) {
-    // No name attached: clean fallback, no half-finished invite chrome.
+  if (!to && !guestsParam) {
+    // Nothing attached: clean fallback, no half-finished invite chrome.
     eyebrow.style.display = 'none';
     closing.style.display = 'none';
     list.style.display = '';
+    title.style.display = '';
     back.classList.add('centered');
     title.textContent = 'Whoops, something went wrong';
     list.innerHTML = '';
@@ -331,11 +332,16 @@
     msg.textContent = "Message us and we'll let you know";
     list.appendChild(msg);
   } else {
-    // Personalised invite.
+    // Personalised invite. The title is optional — without one, just the names show.
     eyebrow.style.display = '';
     closing.style.display = '';
     eyebrow.textContent = "You're Invited";
-    title.textContent = to;
+    if (to && to.trim()) {
+      title.style.display = '';
+      title.textContent = to.trim();
+    } else {
+      title.style.display = 'none';        // no household title for this card
+    }
     if (guestsParam) {
       const names = guestsParam.split('|').map(s => s.trim()).filter(Boolean);
       list.style.display = '';
